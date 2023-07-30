@@ -1,5 +1,6 @@
 package com.ssd.blog.payload;
 
+import java.io.Serializable;
 import java.util.Date;
 
 import jakarta.validation.constraints.NotEmpty;
@@ -12,7 +13,10 @@ import lombok.ToString;
 @AllArgsConstructor
 @NoArgsConstructor
 @ToString
-public class PostDto {
+public class PostDto implements Serializable{
+	
+	
+	private static final long serialVersionUID = 1L;
 	
 	private Long id;
 	@NotEmpty(message = "title is reqired")
