@@ -5,10 +5,15 @@ import java.util.stream.Collectors;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import com.ssd.blog.Exceptions.TitleAlreadyExistedException;
 import com.ssd.blog.entity.Post;
+import com.ssd.blog.payload.PaginationAndSortResponse;
 import com.ssd.blog.payload.PostDto;
 import com.ssd.blog.repository.PostRepository;
 
@@ -20,6 +25,7 @@ public class PostServiceImpl {
 	
 	@Autowired
 	private ModelMapper modelMapper;
+	
 	
 	public PostDto sendPost(PostDto dto) {
 		
@@ -36,14 +42,31 @@ public class PostServiceImpl {
 		return dto;
 	}
 	
-	public List<PostDto> getAllPosts(){
-		List<Post> postlist =postRepository.findAll();
-		List<PostDto> dtoList=postlist.stream().map((post)->
+	public PaginationAndSortResponse getAllPosts(int pageNo,int size,String sortDirc,String sortBy){
+		  System.out.println("fetched data from db");
+		Sort sort=sortDirc.equalsIgnoreCase(Sort.Direction.ASC.name())? Sort.by(sortBy).ascending():Sort.by(sortBy).descending();
+		
+		Pageable pages=PageRequest.of(pageNo, size,sort);
+		
+		Page<Post> posts= postRepository.findAll(pages); 
+
+	
+		List<PostDto> dtoList=posts.stream().map((post)->
 			 modelMapper.map(post, PostDto.class)
 		).collect(Collectors.toList());
-		return dtoList;
+		
+		PaginationAndSortResponse paginationAndSortResponse =new PaginationAndSortResponse();
+		paginationAndSortResponse.setPostsList(dtoList);
+		paginationAndSortResponse.setTotalElements(posts.getTotalElements());
+		paginationAndSortResponse.setLast(posts.isLast());
+		paginationAndSortResponse.setPageNo(posts.getNumber());
+		paginationAndSortResponse.setPageSize(posts.getSize());
+		paginationAndSortResponse.setTotalPages(posts.getTotalPages());
+	
+		return paginationAndSortResponse;
 	}
 	public PostDto getPostById(long id) {
+		System.out.println("fetched data from db");
 		Post post=postRepository.findById(id).get();
 		PostDto dto=this.modelMapper.map(post, PostDto.class);
 		
